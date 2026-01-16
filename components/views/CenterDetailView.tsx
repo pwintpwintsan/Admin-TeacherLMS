@@ -33,6 +33,8 @@ interface CenterDetailViewProps {
   onBack: () => void;
   onManageCourse: (courseId: string) => void;
   onPreviewCourse: (courseId: string) => void;
+  // Added checkPermission prop to fix TS error in App.tsx
+  checkPermission: (category: any, action: string) => boolean;
 }
 
 const OrderRequiredModal = ({ onClose }: { onClose: () => void }) => (
@@ -165,7 +167,8 @@ const HubSettingsModal = ({ school, onClose }: { school: any, onClose: () => voi
   </div>
 );
 
-export const CenterDetailView: React.FC<CenterDetailViewProps> = ({ centerId, onBack, onManageCourse, onPreviewCourse }) => {
+// Destructure checkPermission to satisfy App.tsx requirements
+export const CenterDetailView: React.FC<CenterDetailViewProps> = ({ centerId, onBack, onManageCourse, onPreviewCourse, checkPermission }) => {
   const school = MOCK_SCHOOLS.find(s => s.id === centerId) || MOCK_SCHOOLS[0];
   const [isAddingCourse, setIsAddingCourse] = useState(false);
   const [isEditingHub, setIsEditingHub] = useState(false);
@@ -283,7 +286,7 @@ export const CenterDetailView: React.FC<CenterDetailViewProps> = ({ centerId, on
             
             <button 
               onClick={() => setIsEditingHub(true)}
-              className="w-full py-4 px-6 md:py-5 md:px-8 mt-4 md:mt-6 bg-[#292667] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-[#3b82f6] transition-all active:scale-95 border-b-4 border-black/20 flex-shrink-0 flex items-center justify-center gap-3"
+              className="w-full py-4 px-6 md:py-5 md:px-8 mt-4 md:mt-6 bg-[#292667] text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-[#3b82f6] transition-all active:scale-95 border-b-4 border-black/10 flex-shrink-0 flex items-center justify-center gap-3"
             >
               <Settings2 size={16} /> Modify Hub Settings
             </button>

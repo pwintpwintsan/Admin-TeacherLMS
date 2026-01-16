@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { MOCK_SCHOOLS } from '../../constants.tsx';
-import { School, UserPermissions } from '../../types.ts';
+import { School, UserPermissions, UserRole } from '../../types.ts';
 import { 
   ShieldCheck, 
   Building2, 
@@ -26,17 +26,23 @@ interface RolesPermissionsViewProps {
   onRegisterBranch: () => void;
   rolePerms: Record<string, UserPermissions>;
   setRolePerms: React.Dispatch<React.SetStateAction<Record<string, UserPermissions>>>;
+  activeRole?: UserRole;
 }
 
-export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRegisterBranch, rolePerms, setRolePerms }) => {
+export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRegisterBranch, rolePerms, setRolePerms, activeRole }) => {
   const [schools, setSchools] = useState<School[]>(MOCK_SCHOOLS);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>(MOCK_SCHOOLS[0].id);
   const [isEditingQuota, setIsEditingQuota] = useState(false);
+
+  const isSuperAdmin = activeRole === UserRole.SUPER_ADMIN;
 
   const roles = ['Student', 'Teacher', 'School Admin'];
   const selectedSchool = schools.find(s => s.id === selectedSchoolId) || schools[0];
 
   const togglePerm = (role: string, category: keyof UserPermissions, action: string) => {
+    // Super admins shouldn't edit matrix if we want strict read-only for them
+    if (isSuperAdmin) return;
+    
     const updatedRolePerms = { ...rolePerms[role] };
     // @ts-ignore
     updatedRolePerms[category][action] = !updatedRolePerms[category][action];
@@ -106,17 +112,19 @@ export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRe
            <div>
              <h2 className="text-4xl font-black leading-none tracking-tight uppercase">Governance <span className="text-[#fbee21]">& Control</span></h2>
              <div className="flex items-center gap-3 mt-3">
-                <span className="px-3 py-1 bg-white/10 rounded-lg text-[11px] font-black uppercase tracking-[0.1em] text-white">CENTRAL COMMAND</span>
-                <span className="text-[12px] font-black text-[#fbee21] uppercase tracking-[0.15em]">Global Access Management</span>
+                <span className="px-3 py-1 bg-white/10 rounded-lg text-[11px] font-black uppercase tracking-[0.1em] text-white">{isSuperAdmin ? 'HUB ROSTER ONLY' : 'CENTRAL COMMAND'}</span>
+                <span className="text-[12px] font-black text-[#fbee21] uppercase tracking-[0.15em]">{isSuperAdmin ? 'Local Access Management' : 'Global Access Management'}</span>
              </div>
            </div>
         </div>
-        <button 
-          onClick={onRegisterBranch}
-          className="flex items-center gap-4 px-10 py-5 bg-[#fbee21] text-[#292667] rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:scale-105 active:scale-95 transition-all relative z-10 border-b-6 border-black/10"
-        >
-           <Plus size={28} strokeWidth={4} /> Register Branch
-        </button>
+        {!isSuperAdmin && (
+          <button 
+            onClick={onRegisterBranch}
+            className="flex items-center gap-4 px-10 py-5 bg-[#fbee21] text-[#292667] rounded-[2rem] font-black uppercase tracking-widest text-sm shadow-xl hover:scale-105 active:scale-95 transition-all relative z-10 border-b-6 border-black/10"
+          >
+             <Plus size={28} strokeWidth={4} /> Register Branch
+          </button>
+        )}
       </div>
 
       {/* Branch Selector Filter Style Bar */}
@@ -127,21 +135,28 @@ export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRe
               <Building2 size={24} strokeWidth={3} />
             </div>
             <select 
+              disabled={isSuperAdmin}
               value={selectedSchoolId}
               onChange={(e) => setSelectedSchoolId(e.target.value)}
-              className="w-full bg-slate-50 pl-16 pr-8 py-5 rounded-[1.8rem] border-2 border-slate-100 focus:border-[#3b82f6] outline-none font-black text-[#292667] text-lg uppercase appearance-none cursor-pointer transition-all"
+              className={`w-full bg-slate-50 pl-16 pr-8 py-5 rounded-[1.8rem] border-2 border-slate-100 focus:border-[#3b82f6] outline-none font-black text-[#292667] text-lg uppercase appearance-none transition-all ${isSuperAdmin ? 'cursor-default opacity-80' : 'cursor-pointer'}`}
             >
-              {schools.map(s => <option key={s.id} value={s.id}>{s.name} - {s.location}</option>)}
+              {isSuperAdmin ? (
+                <option value={MOCK_SCHOOLS[0].id}>{MOCK_SCHOOLS[0].name} - {MOCK_SCHOOLS[0].location}</option>
+              ) : (
+                schools.map(s => <option key={s.id} value={s.id}>{s.name} - {s.location}</option>)
+              )}
             </select>
-            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-              <ChevronDown size={24} strokeWidth={3} />
-            </div>
+            {!isSuperAdmin && (
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                <ChevronDown size={24} strokeWidth={3} />
+              </div>
+            )}
           </div>
         </div>
 
         <div className="flex items-center gap-8 px-8 py-2 border-l-4 border-slate-100 h-full">
           <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setIsEditingQuota(true)}>
+            <div className={`flex items-center gap-4 group ${!isSuperAdmin && 'cursor-pointer'}`} onClick={() => !isSuperAdmin && setIsEditingQuota(true)}>
                 <div className="text-right">
                   <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Staff / Students Quota</p>
                   <div className="flex items-center gap-3">
@@ -159,9 +174,11 @@ export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRe
                     </div>
                   </div>
                 </div>
-                <div className="p-2 bg-slate-50 rounded-xl text-slate-300 group-hover:text-[#3b82f6] group-hover:bg-indigo-50 transition-all">
-                  <Edit size={16} strokeWidth={3} />
-                </div>
+                {!isSuperAdmin && (
+                  <div className="p-2 bg-slate-50 rounded-xl text-slate-300 group-hover:text-[#3b82f6] group-hover:bg-indigo-50 transition-all">
+                    <Edit size={16} strokeWidth={3} />
+                  </div>
+                )}
             </div>
           </div>
         </div>
@@ -178,12 +195,14 @@ export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRe
                  <p className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">Specific Permissions for {selectedSchool.location} Hub</p>
               </div>
            </div>
-           <div className="flex items-center gap-3">
-              <span className="px-4 py-2 bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60">Auto-Saving Enabled</span>
-              <button className="px-8 py-4 bg-white/10 hover:bg-[#ec2027] transition-all rounded-[1.5rem] text-xs font-black uppercase tracking-widest border-2 border-white/10">
-                Reset Matrix
-              </button>
-           </div>
+           {!isSuperAdmin && (
+             <div className="flex items-center gap-3">
+                <span className="px-4 py-2 bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60">Auto-Saving Enabled</span>
+                <button className="px-8 py-4 bg-white/10 hover:bg-[#ec2027] transition-all rounded-[1.5rem] text-xs font-black uppercase tracking-widest border-2 border-white/10">
+                  Reset Matrix
+                </button>
+             </div>
+           )}
         </div>
 
         <div className="flex-1 overflow-auto scrollbar-hide">
@@ -235,12 +254,13 @@ export const RolesPermissionsView: React.FC<RolesPermissionsViewProps> = ({ onRe
                           return (
                             <td key={role} className="px-8 py-6 text-center">
                                <button 
+                                 disabled={isSuperAdmin}
                                  onClick={() => togglePerm(role, cat.id, action.id)}
                                  className={`w-16 h-16 rounded-[2rem] flex items-center justify-center mx-auto transition-all shadow-lg ${
                                    isActive 
                                      ? 'bg-[#292667] text-[#fbee21] shadow-[#292667]/30 scale-105 rotate-0' 
                                      : 'bg-white border-4 border-slate-50 text-slate-100 rotate-90 scale-90 hover:border-slate-200 hover:text-slate-200'
-                                 }`}
+                                 } ${isSuperAdmin ? 'cursor-default' : ''}`}
                                >
                                  {isActive ? <Check size={32} strokeWidth={4} /> : <X size={32} strokeWidth={4} />}
                                </button>

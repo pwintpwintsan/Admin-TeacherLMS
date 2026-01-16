@@ -1,6 +1,7 @@
 
 export enum UserRole {
   MAIN_CENTER = 'main-center',
+  SUPER_ADMIN = 'super-admin',
   SCHOOL_ADMIN = 'school-admin',
   TEACHER = 'teacher',
   STUDENT = 'student',

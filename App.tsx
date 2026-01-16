@@ -40,10 +40,16 @@ const App: React.FC = () => {
       resources: { view: true, upload: false, delete: false },
     },
     'Teacher': {
-      courses: { view: true, edit: false, delete: false }, // User requested this can be changed via UI
+      courses: { view: true, edit: false, delete: false },
       certificates: { view: true, edit: true },
       accounts: { view: true, create: false, edit: false, delete: false },
       resources: { view: true, upload: true, delete: false },
+    },
+    'Super Admin': {
+      courses: { view: true, edit: false, delete: false }, // View like teacher
+      certificates: { view: true, edit: true },           // Edit certificates like Admin
+      accounts: { view: true, create: true, edit: true, delete: true }, // Create teacher/student accounts
+      resources: { view: true, upload: true, delete: true },
     },
     'School Admin': {
       courses: { view: true, edit: true, delete: true },
@@ -58,7 +64,8 @@ const App: React.FC = () => {
     if (activeRole === UserRole.MAIN_CENTER) return true;
     
     const roleKey = activeRole === UserRole.STUDENT ? 'Student' : 
-                    activeRole === UserRole.TEACHER ? 'Teacher' : 'School Admin';
+                    activeRole === UserRole.TEACHER ? 'Teacher' : 
+                    activeRole === UserRole.SUPER_ADMIN ? 'Super Admin' : 'School Admin';
     
     const perms = rolePermissions[roleKey];
     if (!perms || !perms[category]) return false;
@@ -156,9 +163,10 @@ const App: React.FC = () => {
           onRegisterBranch={() => setCurrentView(View.REGISTER_BRANCH)} 
           rolePerms={rolePermissions}
           setRolePerms={setRolePermissions}
+          activeRole={activeRole}
         />;
       case View.ACCOUNT_CREATION:
-        return <AccountCreationView checkPermission={checkPermission} />;
+        return <AccountCreationView checkPermission={checkPermission} activeRole={activeRole} />;
       case View.REGISTER_BRANCH:
         return <BranchRegistrationView onBack={() => setCurrentView(View.MY_CLASSES)} />;
       case View.COURSE_VIEWER:
@@ -185,6 +193,7 @@ const App: React.FC = () => {
         onRoleChange={(role) => {
           setActiveRole(role);
           if (role === UserRole.MAIN_CENTER) setCurrentView(View.COURSES_ADMIN);
+          else if (role === UserRole.SUPER_ADMIN) setCurrentView(View.MY_CLASSES);
           else if (role === UserRole.TEACHER) setCurrentView(View.MY_CLASSES);
           else if (role === UserRole.STUDENT) setCurrentView(View.STUDENT_DASHBOARD);
         }}

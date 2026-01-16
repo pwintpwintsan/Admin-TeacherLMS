@@ -308,9 +308,10 @@ export const CourseViewerView: React.FC<CourseViewerViewProps> = ({ courseId, on
                <h3 className="text-4xl font-black text-[#292667] uppercase tracking-tighter">Ready to Learn?</h3>
                <p className="text-lg font-bold text-slate-400 mt-4 uppercase tracking-[0.2em]">Select a task from the map to begin your adventure</p>
                <div className="mt-12 flex gap-4">
-                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ delay: '0ms' }}></div>
-                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ delay: '150ms' }}></div>
-                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ delay: '300ms' }}></div>
+                  {/* Fixed 'delay' to 'animationDelay' in style objects */}
+                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-3 h-3 rounded-full bg-slate-200 animate-bounce" style={{ animationDelay: '300ms' }}></div>
                </div>
             </div>
           )}

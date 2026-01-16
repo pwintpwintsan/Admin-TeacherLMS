@@ -2,8 +2,14 @@
 import React, { useState } from 'react';
 import { MOCK_SCHOOLS } from '../../constants.tsx';
 import { UserPlus, ShieldAlert, Mail, Lock, User, UserCheck, CheckCircle2, AlertCircle, Search, Filter, Trash2, Edit, Building2, MoreHorizontal, ShieldCheck, Plus, GraduationCap, Briefcase, ChevronDown } from 'lucide-react';
+import { UserRole } from '../../types.ts';
 
-export const AccountCreationView: React.FC = () => {
+interface AccountCreationViewProps {
+  activeRole?: UserRole;
+  checkPermission?: (category: any, action: string) => boolean;
+}
+
+export const AccountCreationView: React.FC<AccountCreationViewProps> = ({ activeRole }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'manage'>('manage');
   const [formData, setFormData] = useState({
     firstName: '',
@@ -14,6 +20,8 @@ export const AccountCreationView: React.FC = () => {
     branchName: '',
     password: '',
   });
+
+  const isSuperAdmin = activeRole === UserRole.SUPER_ADMIN;
 
   const [mockStaff, setMockStaff] = useState([
     { id: 's1', name: 'Alice Teacher', role: 'Teacher', branch: 'Downtown Branch', email: 'alice@ubook.com', status: 'Active' },
@@ -51,8 +59,8 @@ export const AccountCreationView: React.FC = () => {
            <div>
              <h2 className="text-4xl font-black leading-none tracking-tight uppercase">Staff <span className="text-[#fbee21]">Hub</span></h2>
              <div className="flex items-center gap-3 mt-3">
-                <span className="px-3 py-1 bg-white/10 rounded-lg text-[11px] font-black uppercase tracking-[0.1em] text-white">PROVISIONING CENTER</span>
-                <span className="text-[12px] font-black text-[#fbee21] uppercase tracking-[0.15em]">Global Account Manager</span>
+                <span className="px-3 py-1 bg-white/10 rounded-lg text-[11px] font-black uppercase tracking-[0.1em] text-white">{isSuperAdmin ? 'BRANCH MANAGER' : 'PROVISIONING CENTER'}</span>
+                <span className="text-[12px] font-black text-[#fbee21] uppercase tracking-[0.15em]">{isSuperAdmin ? 'Local Account Manager' : 'Global Account Manager'}</span>
              </div>
            </div>
         </div>
@@ -182,10 +190,17 @@ export const AccountCreationView: React.FC = () => {
                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-2">Primary Hub Assignment</label>
                      <div className="relative">
                         <Building2 className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
-                        <select className="w-full bg-slate-50 pl-14 pr-6 py-4 rounded-[1.5rem] border-2 border-slate-100 focus:border-[#f43f5e] outline-none font-black text-lg text-[#292667] shadow-inner cursor-pointer appearance-none uppercase">
-                           {MOCK_SCHOOLS.map(s => <option key={s.id}>{s.name}</option>)}
+                        <select 
+                          disabled={isSuperAdmin}
+                          className={`w-full bg-slate-50 pl-14 pr-6 py-4 rounded-[1.5rem] border-2 border-slate-100 focus:border-[#f43f5e] outline-none font-black text-lg text-[#292667] shadow-inner cursor-pointer appearance-none uppercase ${isSuperAdmin ? 'opacity-80' : ''}`}
+                        >
+                           {isSuperAdmin ? (
+                             <option>{MOCK_SCHOOLS[0].name}</option>
+                           ) : (
+                             MOCK_SCHOOLS.map(s => <option key={s.id}>{s.name}</option>)
+                           )}
                         </select>
-                        <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" size={20} />
+                        {!isSuperAdmin && <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" size={20} />}
                      </div>
                   </div>
 
@@ -200,8 +215,8 @@ export const AccountCreationView: React.FC = () => {
                           <select className="w-full bg-slate-50 px-6 py-4 rounded-[1.5rem] border-2 border-slate-100 outline-none font-black text-sm uppercase text-[#292667] shadow-inner cursor-pointer appearance-none">
                              <option>Student Account</option>
                              <option>Teacher / Educator</option>
-                             <option>Hub Administrator</option>
-                             <option>Main Center Editor</option>
+                             {!isSuperAdmin && <option>Hub Administrator</option>}
+                             {!isSuperAdmin && <option>Main Center Editor</option>}
                           </select>
                           <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" size={20} />
                        </div>
